@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres_db
+    restart: unless-stopped
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+#      - ./docker/postgresql/data:/var/lib/postgresql/data   # Persistent volume for database
+      - ./docker/postgresql/init-scripts/init.sql:/docker-entrypoint-initdb.d/init.sql  # Init scripts
+
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: database_migration
+
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "myuser", "-d", "database_migration"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    depends_on:
+      - postgres
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: myuser@example.com
+      PGADMIN_DEFAULT_PASSWORD: mypassword
